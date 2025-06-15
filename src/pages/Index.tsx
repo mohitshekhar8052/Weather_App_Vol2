@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MapPin, Search, Sun, Cloud, CloudRain, CloudSnow, Wind, Droplets, Eye, Thermometer, Gauge, Navigation } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 interface WeatherData {
   location: {
@@ -82,20 +81,12 @@ const Index = () => {
   };
 
   const getWeatherIcon = (condition: string) => {
-    const iconClass = "w-20 h-20 drop-shadow-2xl";
+    const iconClass = "w-20 h-20 drop-shadow-lg";
     if (condition.toLowerCase().includes('sun')) return <Sun className={`${iconClass} text-amber-400`} />;
     if (condition.toLowerCase().includes('cloud')) return <Cloud className={`${iconClass} text-slate-300`} />;
     if (condition.toLowerCase().includes('rain')) return <CloudRain className={`${iconClass} text-cyan-400`} />;
     if (condition.toLowerCase().includes('snow')) return <CloudSnow className={`${iconClass} text-blue-200`} />;
     return <Sun className={`${iconClass} text-amber-400`} />;
-  };
-
-  const getBackgroundClass = (condition: string) => {
-    if (condition.toLowerCase().includes('sun')) return 'from-amber-500 via-orange-500 to-pink-600';
-    if (condition.toLowerCase().includes('cloud')) return 'from-slate-600 via-slate-700 to-slate-900';
-    if (condition.toLowerCase().includes('rain')) return 'from-cyan-500 via-blue-600 to-indigo-800';
-    if (condition.toLowerCase().includes('snow')) return 'from-blue-300 via-indigo-400 to-purple-600';
-    return 'from-violet-600 via-purple-600 to-blue-600';
   };
 
   const getDayName = (dateStr: string, index: number) => {
@@ -104,30 +95,16 @@ const Index = () => {
     return new Date(dateStr).toLocaleDateString('en', { weekday: 'short' });
   };
 
-  // Add native app detection
-  const isNativeApp = window.location.protocol === 'capacitor:' || 
-                     (window as any).Capacitor !== undefined;
-
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${weather ? getBackgroundClass(weather.current.condition.text) : 'from-indigo-900 via-purple-900 to-pink-900'} transition-all duration-1000 relative overflow-hidden ${isNativeApp ? 'pt-safe pb-safe' : ''}`}>
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse-glow"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-white/3 rounded-full blur-3xl animate-float"></div>
-
-        {/* Drifting Clouds */}
-        <Cloud className="absolute top-[15%] -left-[10%] w-64 h-64 text-white/10 opacity-60 animate-drift-1" />
-        <Cloud className="absolute top-[25%] -right-[15%] w-80 h-80 text-white/5 opacity-80 animate-drift-2" />
-        <Cloud className="absolute bottom-[20%] left-[5%] w-48 h-48 text-white/10 opacity-70 animate-drift-3" />
-        <Cloud className="absolute bottom-[10%] right-[10%] w-72 h-72 text-white/5 opacity-60 animate-drift-4" />
-      </div>
+    <div className={`min-h-screen bg-gradient-to-br from-blue-800 via-indigo-900 to-black transition-all duration-1000 relative overflow-hidden`}>
+      <div className="absolute inset-0 bg-grid-slate-900/[0.04] bg-[bottom_1px_center] dark:bg-grid-slate-400/[0.05] dark:bg-bottom_1px_center]"></div>
       
-      <div className="relative min-h-screen backdrop-blur-sm bg-black/10 p-6">
+      <div className="relative min-h-screen p-6">
         <div className="max-w-md mx-auto space-y-8">
           {/* Header */}
           <div className="text-center pt-8 pb-6">
             <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
-              Weather<span className="text-yellow-300">Ⓧ</span>
+              Weather<span className="text-amber-400">Ⓧ</span>
             </h1>
             <p className="text-white/70 text-lg">
               Next-gen weather intelligence
@@ -135,19 +112,18 @@ const Index = () => {
           </div>
 
           {/* Search */}
-          <Card className="p-6 bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl rounded-3xl">
+          <Card className="p-6 bg-slate-900/60 border border-slate-700 shadow-2xl rounded-3xl">
             <div className="flex gap-3">
               <Input
                 placeholder="Search any city..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white/40 focus:ring-white/20 rounded-2xl h-12 text-lg backdrop-blur-sm"
+                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 focus:border-amber-500 focus:ring-amber-500 rounded-2xl h-12 text-lg"
               />
               <Button 
                 onClick={handleSearch}
-                className="bg-white/15 hover:bg-white/25 border-white/20 text-white backdrop-blur-sm h-12 px-6 rounded-2xl transition-all duration-300 hover:scale-105"
-                variant="outline"
+                className="btn-gradient h-12 px-6 rounded-2xl transition-all duration-300 hover:scale-105"
               >
                 <Search className="w-5 h-5" />
               </Button>
@@ -156,16 +132,15 @@ const Index = () => {
 
           {/* Current Weather */}
           {isLoading ? (
-            <Card className="p-8 bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl rounded-3xl">
+            <Card className="p-8 bg-slate-900/60 border border-slate-700 shadow-2xl rounded-3xl">
               <div className="animate-pulse text-center space-y-4">
-                <div className="w-20 h-20 bg-white/20 rounded-full mx-auto"></div>
-                <div className="h-12 bg-white/20 rounded-2xl"></div>
-                <div className="h-6 bg-white/20 rounded-xl w-2/3 mx-auto"></div>
+                <div className="w-20 h-20 bg-slate-800 rounded-full mx-auto"></div>
+                <div className="h-12 bg-slate-800 rounded-2xl"></div>
+                <div className="h-6 bg-slate-800 rounded-xl w-2/3 mx-auto"></div>
               </div>
             </Card>
           ) : weather ? (
-            <Card className="p-8 bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl rounded-3xl text-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
+            <Card className="p-8 bg-slate-900/60 border border-slate-700 shadow-2xl rounded-3xl text-center relative overflow-hidden">
               <div className="relative z-10">
                 <div className="flex items-center justify-center mb-6">
                   <MapPin className="w-5 h-5 text-white/70 mr-2" />
@@ -202,7 +177,7 @@ const Index = () => {
                 { icon: Eye, label: 'Visibility', value: `${weather.current.vis_km} km`, color: 'text-purple-300' },
                 { icon: Gauge, label: 'Pressure', value: `${weather.current.pressure_mb} mb`, color: 'text-green-300' },
               ].map((item, index) => (
-                <Card key={index} className="p-5 bg-white/10 backdrop-blur-xl border-white/20 shadow-xl rounded-2xl text-center hover:bg-white/15 transition-all duration-300 hover:scale-105">
+                <Card key={index} className="p-5 bg-slate-900/60 border border-slate-700 shadow-xl rounded-2xl text-center hover:bg-slate-800/80 transition-all duration-300 hover:scale-105">
                   <item.icon className={`w-8 h-8 ${item.color} mx-auto mb-3`} />
                   <div className="text-white/70 text-sm mb-1">{item.label}</div>
                   <div className="text-white text-lg font-semibold">{item.value}</div>
@@ -213,14 +188,14 @@ const Index = () => {
 
           {/* Extended Forecast */}
           {weather && (
-            <Card className="p-6 bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl rounded-3xl">
+            <Card className="p-6 bg-slate-900/60 border border-slate-700 shadow-2xl rounded-3xl">
               <h3 className="text-white text-xl font-semibold mb-6 flex items-center">
                 <Navigation className="w-5 h-5 mr-2" />
                 5-Day Forecast
               </h3>
               <div className="space-y-4">
                 {weather.forecast.forecastday.map((day, index) => (
-                  <div key={day.date} className="flex items-center justify-between py-3 px-2 rounded-2xl hover:bg-white/5 transition-all duration-200">
+                  <div key={day.date} className="flex items-center justify-between py-3 px-2 rounded-2xl hover:bg-slate-800/60 transition-all duration-200">
                     <div className="text-white/90 font-medium min-w-[80px]">
                       {getDayName(day.date, index)}
                     </div>
