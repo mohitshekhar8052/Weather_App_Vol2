@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -105,8 +104,12 @@ const Index = () => {
     return new Date(dateStr).toLocaleDateString('en', { weekday: 'short' });
   };
 
+  // Add native app detection
+  const isNativeApp = window.location.protocol === 'capacitor:' || 
+                     (window as any).Capacitor !== undefined;
+
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${weather ? getBackgroundClass(weather.current.condition.text) : 'from-indigo-900 via-purple-900 to-pink-900'} transition-all duration-1000 relative overflow-hidden`}>
+    <div className={`min-h-screen bg-gradient-to-br ${weather ? getBackgroundClass(weather.current.condition.text) : 'from-indigo-900 via-purple-900 to-pink-900'} transition-all duration-1000 relative overflow-hidden ${isNativeApp ? 'pt-safe pb-safe' : ''}`}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse-glow"></div>
@@ -115,12 +118,14 @@ const Index = () => {
       
       <div className="relative min-h-screen backdrop-blur-sm bg-black/10 p-6">
         <div className="max-w-md mx-auto space-y-8">
-          {/* Header */}
-          <div className="text-center pt-12 pb-6">
+          {/* Header - Updated for native app */}
+          <div className="text-center pt-8 pb-6">
             <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
               Weather<span className="text-yellow-300">Ⓧ</span>
             </h1>
-            <p className="text-white/70 text-lg">Next-gen weather intelligence</p>
+            <p className="text-white/70 text-lg">
+              {isNativeApp ? 'Native weather intelligence' : 'Next-gen weather intelligence'}
+            </p>
           </div>
 
           {/* Search */}
@@ -226,9 +231,11 @@ const Index = () => {
             </Card>
           )}
 
-          {/* Footer */}
+          {/* Footer - Updated for native */}
           <div className="text-center pb-8">
-            <p className="text-white/50 text-sm">Powered by advanced weather intelligence</p>
+            <p className="text-white/50 text-sm">
+              {isNativeApp ? 'Native app powered by advanced weather intelligence' : 'Powered by advanced weather intelligence'}
+            </p>
           </div>
         </div>
       </div>
