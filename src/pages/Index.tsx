@@ -1,224 +1,97 @@
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { MapPin, Search, Sun, Cloud, CloudRain, CloudSnow, Wind, Droplets, Eye, Thermometer, Gauge, Navigation } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 
-interface WeatherData {
-  location: {
-    name: string;
-    country: string;
-  };
-  current: {
-    temp_c: number;
-    condition: {
-      text: string;
-      icon: string;
-    };
-    humidity: number;
-    wind_kph: number;
-    vis_km: number;
-    feelslike_c: number;
-    pressure_mb: number;
-    uv: number;
-  };
-  forecast: {
-    forecastday: Array<{
-      date: string;
-      day: {
-        maxtemp_c: number;
-        mintemp_c: number;
-        condition: {
-          text: string;
-          icon: string;
-        };
-      };
-    }>;
-  };
-}
+import React, { useState, useEffect, useCallback } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
+import { Button } from '@/components/ui/button';
+import { PartyPopper, Goal, Laptop } from 'lucide-react';
+
+const slides = [
+  {
+    icon: PartyPopper,
+    title: 'Welcome to Goldfish!',
+    description: 'Goldfish was created to instill a more fun and engaging work culture.',
+  },
+  {
+    icon: Goal,
+    title: 'Achieve Your Goals',
+    description: 'Get rewarded with coins for reaching your sales goals, taking a daily quiz, or just showing up on time for work.',
+  },
+  {
+    icon: Laptop,
+    title: 'Treat Yourself',
+    description: 'Cash in those hard earned coins for real world rewards like gift cards or even a laptop.',
+  },
+];
 
 const Index = () => {
-  const [city, setCity] = useState('Tokyo');
-  const [searchInput, setSearchInput] = useState('');
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const { data: weather, isLoading, error } = useQuery({
-    queryKey: ['weather', city],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockData: WeatherData = {
-        location: { name: city, country: 'Japan' },
-        current: {
-          temp_c: 24,
-          condition: { text: 'Partly cloudy', icon: 'https://cdn.weatherapi.com/weather/64x64/day/116.png' },
-          humidity: 68,
-          wind_kph: 12,
-          vis_km: 16,
-          feelslike_c: 27,
-          pressure_mb: 1013,
-          uv: 6
-        },
-        forecast: {
-          forecastday: [
-            { date: '2024-01-01', day: { maxtemp_c: 26, mintemp_c: 18, condition: { text: 'Sunny', icon: '' } } },
-            { date: '2024-01-02', day: { maxtemp_c: 23, mintemp_c: 16, condition: { text: 'Cloudy', icon: '' } } },
-            { date: '2024-01-03', day: { maxtemp_c: 21, mintemp_c: 14, condition: { text: 'Rainy', icon: '' } } },
-            { date: '2024-01-04', day: { maxtemp_c: 25, mintemp_c: 17, condition: { text: 'Sunny', icon: '' } } },
-            { date: '2024-01-05', day: { maxtemp_c: 28, mintemp_c: 20, condition: { text: 'Partly cloudy', icon: '' } } },
-          ]
-        }
-      };
-      return mockData;
-    },
-  });
+  const scrollTo = useCallback((index: number) => emblaApi && emblaApi.scrollTo(index), [emblaApi]);
 
-  const handleSearch = () => {
-    if (searchInput.trim()) {
-      setCity(searchInput.trim());
-      setSearchInput('');
-    }
-  };
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
 
-  const getWeatherIcon = (condition: string) => {
-    const iconClass = "w-20 h-20 drop-shadow-lg";
-    if (condition.toLowerCase().includes('sun')) return <Sun className={`${iconClass} text-amber-400`} />;
-    if (condition.toLowerCase().includes('cloud')) return <Cloud className={`${iconClass} text-slate-300`} />;
-    if (condition.toLowerCase().includes('rain')) return <CloudRain className={`${iconClass} text-cyan-400`} />;
-    if (condition.toLowerCase().includes('snow')) return <CloudSnow className={`${iconClass} text-blue-200`} />;
-    return <Sun className={`${iconClass} text-amber-400`} />;
-  };
-
-  const getDayName = (dateStr: string, index: number) => {
-    if (index === 0) return 'Today';
-    if (index === 1) return 'Tomorrow';
-    return new Date(dateStr).toLocaleDateString('en', { weekday: 'short' });
-  };
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+    return () => {
+      emblaApi.off('select', onSelect);
+      emblaApi.off('reInit', onSelect);
+    };
+  }, [emblaApi, onSelect]);
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-800 via-indigo-900 to-black transition-all duration-1000 relative overflow-hidden`}>
-      <div className="absolute inset-0 bg-grid-slate-900/[0.04] bg-[bottom_1px_center] dark:bg-grid-slate-400/[0.05] dark:bg-bottom_1px_center]"></div>
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between p-6 md:p-8 relative overflow-hidden">
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary/20 via-primary/5 to-transparent blur-3xl pointer-events-none -z-10"></div>
       
-      <div className="relative min-h-screen p-6">
-        <div className="max-w-md mx-auto space-y-8">
-          {/* Header */}
-          <div className="text-center pt-8 pb-6">
-            <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
-              Weather<span className="text-amber-400">Ⓧ</span>
-            </h1>
-            <p className="text-white/70 text-lg">
-              Next-gen weather intelligence
-            </p>
-          </div>
+      <div className="h-10 flex items-center justify-end">
+        {selectedIndex < slides.length - 1 && (
+            <Button variant="ghost" className="text-muted-foreground font-semibold">
+              Skip
+            </Button>
+        )}
+      </div>
 
-          {/* Search */}
-          <Card className="p-6 bg-slate-900/60 border border-slate-700 shadow-2xl rounded-3xl">
-            <div className="flex gap-3">
-              <Input
-                placeholder="Search any city..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 focus:border-amber-500 focus:ring-amber-500 rounded-2xl h-12 text-lg"
-              />
-              <Button 
-                onClick={handleSearch}
-                className="btn-gradient h-12 px-6 rounded-2xl transition-all duration-300 hover:scale-105"
-              >
-                <Search className="w-5 h-5" />
-              </Button>
-            </div>
-          </Card>
-
-          {/* Current Weather */}
-          {isLoading ? (
-            <Card className="p-8 bg-slate-900/60 border border-slate-700 shadow-2xl rounded-3xl">
-              <div className="animate-pulse text-center space-y-4">
-                <div className="w-20 h-20 bg-slate-800 rounded-full mx-auto"></div>
-                <div className="h-12 bg-slate-800 rounded-2xl"></div>
-                <div className="h-6 bg-slate-800 rounded-xl w-2/3 mx-auto"></div>
-              </div>
-            </Card>
-          ) : weather ? (
-            <Card className="p-8 bg-slate-900/60 border border-slate-700 shadow-2xl rounded-3xl text-center relative overflow-hidden">
-              <div className="relative z-10">
-                <div className="flex items-center justify-center mb-6">
-                  <MapPin className="w-5 h-5 text-white/70 mr-2" />
-                  <span className="text-white text-xl font-medium">
-                    {weather.location.name}, {weather.location.country}
-                  </span>
-                </div>
-                
-                <div className="mb-8">
-                  {getWeatherIcon(weather.current.condition.text)}
-                </div>
-                
-                <div className="text-7xl font-bold text-white mb-4 tracking-tight">
-                  {Math.round(weather.current.temp_c)}°
-                </div>
-                
-                <div className="text-white/80 text-2xl mb-6 font-light">
-                  {weather.current.condition.text}
-                </div>
-                
-                <div className="text-white/60 text-lg">
-                  Feels like {Math.round(weather.current.feelslike_c)}°
-                </div>
-              </div>
-            </Card>
-          ) : null}
-
-          {/* Weather Details Grid */}
-          {weather && (
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { icon: Wind, label: 'Wind Speed', value: `${weather.current.wind_kph} km/h`, color: 'text-cyan-300' },
-                { icon: Droplets, label: 'Humidity', value: `${weather.current.humidity}%`, color: 'text-blue-300' },
-                { icon: Eye, label: 'Visibility', value: `${weather.current.vis_km} km`, color: 'text-purple-300' },
-                { icon: Gauge, label: 'Pressure', value: `${weather.current.pressure_mb} mb`, color: 'text-green-300' },
-              ].map((item, index) => (
-                <Card key={index} className="p-5 bg-slate-900/60 border border-slate-700 shadow-xl rounded-2xl text-center hover:bg-slate-800/80 transition-all duration-300 hover:scale-105">
-                  <item.icon className={`w-8 h-8 ${item.color} mx-auto mb-3`} />
-                  <div className="text-white/70 text-sm mb-1">{item.label}</div>
-                  <div className="text-white text-lg font-semibold">{item.value}</div>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {/* Extended Forecast */}
-          {weather && (
-            <Card className="p-6 bg-slate-900/60 border border-slate-700 shadow-2xl rounded-3xl">
-              <h3 className="text-white text-xl font-semibold mb-6 flex items-center">
-                <Navigation className="w-5 h-5 mr-2" />
-                5-Day Forecast
-              </h3>
-              <div className="space-y-4">
-                {weather.forecast.forecastday.map((day, index) => (
-                  <div key={day.date} className="flex items-center justify-between py-3 px-2 rounded-2xl hover:bg-slate-800/60 transition-all duration-200">
-                    <div className="text-white/90 font-medium min-w-[80px]">
-                      {getDayName(day.date, index)}
-                    </div>
-                    <div className="flex items-center gap-4 flex-1 justify-center">
-                      <span className="text-white/70 text-sm capitalize">{day.day.condition.text}</span>
-                    </div>
-                    <div className="text-white font-semibold text-right">
-                      <span className="text-lg">{Math.round(day.day.maxtemp_c)}°</span>
-                      <span className="text-white/60 text-sm ml-1">/ {Math.round(day.day.mintemp_c)}°</span>
-                    </div>
+      <div className="flex-grow flex flex-col justify-center">
+        <div className="embla" ref={emblaRef}>
+          <div className="embla__container">
+            {slides.map((slide, index) => (
+              <div className="embla__slide flex flex-col items-center justify-center text-center" key={index}>
+                <div className="w-48 h-48 bg-primary/10 rounded-full flex items-center justify-center mb-10">
+                  <div className="w-40 h-40 bg-primary/10 rounded-full flex items-center justify-center">
+                    <slide.icon className="w-24 h-24 text-primary" strokeWidth={1.5} />
                   </div>
-                ))}
+                </div>
+                <h2 className="text-3xl font-bold tracking-tight mb-4">{slide.title}</h2>
+                <p className="text-lg text-muted-foreground max-w-sm">{slide.description}</p>
               </div>
-            </Card>
-          )}
-
-          {/* Footer */}
-          <div className="text-center pb-8">
-            <p className="text-white/50 text-sm">
-              Powered by advanced weather intelligence
-            </p>
+            ))}
           </div>
         </div>
+      </div>
+
+      <div className="flex flex-col items-center space-y-6 pb-4">
+        <div className="flex gap-2.5">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => scrollTo(index)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${selectedIndex === index ? 'bg-primary scale-125 w-6' : 'bg-muted-foreground/30'}`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {selectedIndex === slides.length - 1 && (
+          <Button className="btn-gradient w-full max-w-sm py-3 h-auto text-lg rounded-full">
+            Sign In
+          </Button>
+        )}
+        <div className="h-10"></div>
       </div>
     </div>
   );
