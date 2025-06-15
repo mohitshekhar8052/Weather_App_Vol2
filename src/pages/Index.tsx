@@ -118,13 +118,13 @@ const Index = () => {
       
       <div className="relative min-h-screen backdrop-blur-sm bg-black/10 p-6">
         <div className="max-w-md mx-auto space-y-8">
-          {/* Header - Updated for native app */}
+          {/* Header */}
           <div className="text-center pt-8 pb-6">
             <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
               Weather<span className="text-yellow-300">Ⓧ</span>
             </h1>
             <p className="text-white/70 text-lg">
-              {isNativeApp ? 'Native weather intelligence' : 'Next-gen weather intelligence'}
+              Next-gen weather intelligence
             </p>
           </div>
 
@@ -231,10 +231,10 @@ const Index = () => {
             </Card>
           )}
 
-          {/* Footer - Updated for native */}
+          {/* Footer */}
           <div className="text-center pb-8">
             <p className="text-white/50 text-sm">
-              {isNativeApp ? 'Native app powered by advanced weather intelligence' : 'Powered by advanced weather intelligence'}
+              Powered by advanced weather intelligence
             </p>
           </div>
         </div>
