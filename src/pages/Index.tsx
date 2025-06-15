@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Button } from '@/components/ui/button';
 import { PartyPopper, Goal, Laptop } from 'lucide-react';
+import AnimatedBackground from '@/components/AnimatedBackground';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" {...props}>
@@ -55,6 +55,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-between p-6 md:p-8 relative overflow-hidden">
+      <AnimatedBackground />
       <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary/20 via-primary/5 to-transparent blur-3xl pointer-events-none -z-10"></div>
       
       <div className="h-10" />
