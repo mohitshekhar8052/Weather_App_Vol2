@@ -111,9 +111,15 @@ const Index = () => {
   return (
     <div className={`min-h-screen bg-gradient-to-br ${weather ? getBackgroundClass(weather.current.condition.text) : 'from-indigo-900 via-purple-900 to-pink-900'} transition-all duration-1000 relative overflow-hidden ${isNativeApp ? 'pt-safe pb-safe' : ''}`}>
       {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse-glow"></div>
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-white/3 rounded-full blur-3xl animate-float"></div>
+
+        {/* Drifting Clouds */}
+        <Cloud className="absolute top-[15%] -left-[10%] w-64 h-64 text-white/10 opacity-60 animate-drift-1" />
+        <Cloud className="absolute top-[25%] -right-[15%] w-80 h-80 text-white/5 opacity-80 animate-drift-2" />
+        <Cloud className="absolute bottom-[20%] left-[5%] w-48 h-48 text-white/10 opacity-70 animate-drift-3" />
+        <Cloud className="absolute bottom-[10%] right-[10%] w-72 h-72 text-white/5 opacity-60 animate-drift-4" />
       </div>
       
       <div className="relative min-h-screen backdrop-blur-sm bg-black/10 p-6">

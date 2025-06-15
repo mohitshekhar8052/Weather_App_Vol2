@@ -160,6 +160,15 @@
   }
 }
 
+@keyframes drift {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100vw);
+  }
+}
+
 .animate-float {
   animation: float 8s ease-in-out infinite;
 }
@@ -172,6 +181,23 @@
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
   background-size: 200% 100%;
   animation: shimmer 3s infinite;
+}
+
+.animate-drift-1 {
+  animation: drift 40s linear infinite;
+  animation-delay: -15s;
+}
+.animate-drift-2 {
+  animation: drift 55s linear infinite;
+  animation-delay: -5s;
+}
+.animate-drift-3 {
+  animation: drift 70s linear infinite;
+  animation-delay: -30s;
+}
+.animate-drift-4 {
+  animation: drift 85s linear infinite;
+  animation-delay: 0s;
 }
 
 /* Native app safe area utilities */
