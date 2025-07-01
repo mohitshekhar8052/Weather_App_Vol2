@@ -73,7 +73,9 @@ This project is built with:
 const API_KEY = 'your_actual_api_key_here'; // Replace with your actual API key
 ```
 
-**Important Note:** In a production application, you should store your API key in environment variables using `.env` files, and access it with `import.meta.env.VITE_WEATHER_API_KEY`.
+**Note:** The app will work without an API key by showing mock weather data. This allows you to test the UI without needing to sign up for an API key immediately.
+
+**Important Note for Production:** In a production application, you should store your API key in environment variables using `.env` files, and access it with `import.meta.env.VITE_WEATHER_API_KEY`.
 
 ## How can I deploy this project?
 

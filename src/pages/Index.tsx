@@ -72,27 +72,41 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Default city to use if no saved locations and no geolocation
+  const DEFAULT_CITY = {
+    id: "37.7749-122.4194",
+    name: "San Francisco",
+    fullName: "San Francisco, US",
+    lat: 37.7749,
+    lon: -122.4194
+  };
+
   // Load saved locations from localStorage on mount
   useEffect(() => {
     const loadSavedLocations = () => {
+      setIsLoading(true);
       const savedLocationsStr = localStorage.getItem('savedLocations');
+      
       if (savedLocationsStr) {
         try {
           const locations = JSON.parse(savedLocationsStr) as SavedLocation[];
           setSavedLocations(locations);
           
-          // Load the first saved location or use geolocation
+          // Load the first saved location if available
           if (locations.length > 0) {
             fetchWeatherForLocation(locations[0]);
           } else {
-            getUserLocation();
+            // Use default city instead of requesting location
+            fetchWeatherForLocation(DEFAULT_CITY);
           }
         } catch (e) {
           console.error('Error parsing saved locations:', e);
-          getUserLocation();
+          fetchWeatherForLocation(DEFAULT_CITY);
         }
       } else {
-        getUserLocation();
+        // Use default city instead of requesting location
+        setSavedLocations([DEFAULT_CITY]);
+        fetchWeatherForLocation(DEFAULT_CITY);
       }
     };
     
@@ -135,11 +149,15 @@ const Index = () => {
     return () => clearTimeout(searchTimer);
   }, [searchQuery]);
 
-  // Get user's current location
+  // Get user's current location - now only called when user explicitly requests it
   const getUserLocation = () => {
     setIsLoading(true);
+    setError(null); // Clear any previous errors
     
     if (navigator.geolocation) {
+      // Show a temporary message during location request
+      setCurrentLocation('Detecting your location...');
+      
       navigator.geolocation.getCurrentPosition(
         async position => {
           const { latitude, longitude } = position.coords;
@@ -165,27 +183,39 @@ const Index = () => {
               
               setError(null);
             } else {
-              setError('Unable to fetch weather data');
+              // Fall back to default city if weather fetch fails
+              if (savedLocations.length > 0) {
+                fetchWeatherForLocation(savedLocations[0]);
+              }
+              setError('Weather data not available for your location');
             }
           } catch (err) {
             console.error('Error getting weather data:', err);
-            setError('Error fetching weather data');
+            if (savedLocations.length > 0) {
+              fetchWeatherForLocation(savedLocations[0]);
+            }
+            setError('Could not get weather for your location');
           } finally {
             setIsLoading(false);
           }
         },
         err => {
           console.error('Geolocation error:', err);
-          setError('Location access denied. Please search for a location.');
+          // Don't show error for permission denied - just use saved location silently
+          if (savedLocations.length > 0) {
+            fetchWeatherForLocation(savedLocations[0]);
+          }
           setIsLoading(false);
-          // Open search dialog if location is denied
-          setIsSearchOpen(true);
-        }
+        },
+        // Options with shorter timeout to avoid long waiting
+        { maximumAge: 60000, timeout: 5000, enableHighAccuracy: false }
       );
     } else {
-      setError('Geolocation not supported. Please search for a location.');
+      // Browser doesn't support geolocation, fall back to saved locations
+      if (savedLocations.length > 0) {
+        fetchWeatherForLocation(savedLocations[0]);
+      }
       setIsLoading(false);
-      setIsSearchOpen(true);
     }
   };
 
@@ -214,6 +244,7 @@ const Index = () => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     setIsLoading(true);
+    setError(null);
     
     try {
       const currentLoc = savedLocations.find(loc => 
@@ -222,12 +253,24 @@ const Index = () => {
       
       if (currentLoc) {
         await fetchWeatherForLocation(currentLoc);
+      } else if (savedLocations.length > 0) {
+        // Just use the first saved location instead of requesting geolocation
+        await fetchWeatherForLocation(savedLocations[0]);
       } else {
-        getUserLocation();
+        // If no locations are available at all, use the default city
+        const defaultCity = {
+          id: "37.7749-122.4194",
+          name: "San Francisco",
+          fullName: "San Francisco, US",
+          lat: 37.7749,
+          lon: -122.4194
+        };
+        setSavedLocations([defaultCity]);
+        await fetchWeatherForLocation(defaultCity);
       }
     } catch (err) {
       console.error('Error refreshing weather:', err);
-      setError('Error refreshing weather data');
+      setError('Could not refresh weather data');
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -260,12 +303,22 @@ const Index = () => {
       <AnimatedBackground />
       
       {/* Navbar */}
-      {/* Error message if needed */}
+      {/* Error message if needed - now dismissable */}
       {error && (
         <Alert className="fixed top-2 right-2 left-2 z-50 bg-destructive/90 backdrop-blur-sm text-destructive-foreground animate-in fade-in slide-in-from-top-5" variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setError(null)} 
+              className="text-xs h-6 px-2 ml-2 text-destructive-foreground hover:bg-destructive/60"
+            >
+              Dismiss
+            </Button>
+          </AlertDescription>
         </Alert>
       )}
 
@@ -286,6 +339,16 @@ const Index = () => {
                   <span className="text-sm font-medium text-foreground/70">Theme</span>
                   <ThemeToggle />
                 </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    getUserLocation();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full mt-4 gap-2"
+                >
+                  <Navigation size={14} /> Use My Location
+                </Button>
                 <div className="border-t border-border my-4 pt-4">
                   <h3 className="text-sm font-medium mb-2">Saved Locations</h3>
                   <div className="space-y-1">
@@ -318,6 +381,7 @@ const Index = () => {
             className="rounded-full" 
             onClick={handleRefresh} 
             disabled={isLoading}
+            title="Refresh weather data"
           >
             {isLoading ? (
               <Loader2 size={18} className="animate-spin" />
@@ -325,10 +389,20 @@ const Index = () => {
               <RefreshCw size={18} className={isRefreshing ? "animate-spin" : ""} />
             )}
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={getUserLocation}
+            disabled={isLoading}
+            title="Use my current location"
+          >
+            <Navigation size={18} />
+          </Button>
           <ThemeToggle />
           <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full" title="Search locations">
                 <Search size={18} />
               </Button>
             </DialogTrigger>
