@@ -59,6 +59,21 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- OpenWeatherMap API
+
+## How to add your OpenWeatherMap API Key
+
+1. Sign up for a free account at [OpenWeatherMap](https://home.openweathermap.org/users/sign_up)
+2. Once registered, go to your [API Keys](https://home.openweathermap.org/api_keys) page
+3. Generate a new API key if you don't already have one
+4. Open `/src/services/weatherService.ts` in your project
+5. Replace `YOUR_API_KEY` with your actual API key:
+
+```typescript
+const API_KEY = 'your_actual_api_key_here'; // Replace with your actual API key
+```
+
+**Important Note:** In a production application, you should store your API key in environment variables using `.env` files, and access it with `import.meta.env.VITE_WEATHER_API_KEY`.
 
 ## How can I deploy this project?
 
