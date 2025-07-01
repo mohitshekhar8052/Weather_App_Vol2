@@ -61,21 +61,31 @@ This project is built with:
 - Tailwind CSS
 - OpenWeatherMap API
 
+## Features
+
+- Modern UI with glassmorphism design and responsive layout
+- Real-time weather data from OpenWeatherMap API (with mock data fallback)
+- Light/dark theme support
+- Weather alerts display for severe weather conditions
+- Support for multiple saved locations
+- Dedicated section for Indian cities
+- Hourly and daily weather forecasts
+
 ## How to add your OpenWeatherMap API Key
 
 1. Sign up for a free account at [OpenWeatherMap](https://home.openweathermap.org/users/sign_up)
 2. Once registered, go to your [API Keys](https://home.openweathermap.org/api_keys) page
 3. Generate a new API key if you don't already have one
-4. Open `/src/services/weatherService.ts` in your project
-5. Replace `YOUR_API_KEY` with your actual API key:
+4. Create a `.env` file in your project root (copy the contents from `.env.example`)
+5. Add your API key to the `.env` file:
 
-```typescript
-const API_KEY = 'your_actual_api_key_here'; // Replace with your actual API key
+```
+VITE_WEATHER_API_KEY=your_actual_api_key_here
 ```
 
 **Note:** The app will work without an API key by showing mock weather data. This allows you to test the UI without needing to sign up for an API key immediately.
 
-**Important Note for Production:** In a production application, you should store your API key in environment variables using `.env` files, and access it with `import.meta.env.VITE_WEATHER_API_KEY`.
+**Alternative Method:** You can also directly edit the API key in `/src/services/weatherService.ts` if you prefer, but using environment variables is the recommended approach.
 
 ## How can I deploy this project?
 

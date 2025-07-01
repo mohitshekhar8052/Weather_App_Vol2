@@ -4,7 +4,7 @@ import {
   Wind, Droplets, Thermometer, Search, MapPin, 
   Clock, ChevronDown, ArrowUp, ArrowDown, Menu, 
   RefreshCw, Calendar, Navigation, Plus, X, Loader2,
-  AlertTriangle
+  AlertTriangle, Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -81,6 +81,66 @@ const Index = () => {
     lon: -122.4194
   };
 
+  // Popular Indian cities for quick access
+  const INDIAN_CITIES: SearchResult[] = [
+    {
+      id: "28.6139-77.2090",
+      name: "New Delhi",
+      fullName: "New Delhi, IN",
+      lat: 28.6139,
+      lon: 77.2090,
+      country: "IN"
+    },
+    {
+      id: "19.0760-72.8777",
+      name: "Mumbai",
+      fullName: "Mumbai, IN",
+      lat: 19.0760,
+      lon: 72.8777,
+      country: "IN"
+    },
+    {
+      id: "12.9716-77.5946",
+      name: "Bengaluru",
+      fullName: "Bengaluru, IN",
+      lat: 12.9716,
+      lon: 77.5946,
+      country: "IN"
+    },
+    {
+      id: "22.5726-88.3639",
+      name: "Kolkata",
+      fullName: "Kolkata, IN",
+      lat: 22.5726,
+      lon: 88.3639,
+      country: "IN"
+    },
+    {
+      id: "13.0827-80.2707",
+      name: "Chennai",
+      fullName: "Chennai, IN",
+      lat: 13.0827,
+      lon: 80.2707,
+      country: "IN"
+    },
+    {
+      id: "17.3850-78.4867",
+      name: "Hyderabad",
+      fullName: "Hyderabad, IN",
+      lat: 17.3850,
+      lon: 78.4867,
+      country: "IN"
+    },
+    {
+      id: "26.9124-75.7873",
+      name: "Jaipur",
+      fullName: "Jaipur, IN",
+      lat: 26.9124,
+      lon: 75.7873,
+      country: "IN"
+    }
+  ];
+
   // Load saved locations from localStorage on mount
   useEffect(() => {
     const loadSavedLocations = () => {
@@ -96,17 +156,22 @@ const Index = () => {
           if (locations.length > 0) {
             fetchWeatherForLocation(locations[0]);
           } else {
-            // Use default city instead of requesting location
-            fetchWeatherForLocation(DEFAULT_CITY);
+            // Use default cities instead of requesting location
+            const defaultLocations = [DEFAULT_CITY, INDIAN_CITIES[0]]; // San Francisco and New Delhi
+            setSavedLocations(defaultLocations);
+            fetchWeatherForLocation(defaultLocations[0]);
           }
         } catch (e) {
           console.error('Error parsing saved locations:', e);
-          fetchWeatherForLocation(DEFAULT_CITY);
+          const defaultLocations = [DEFAULT_CITY, INDIAN_CITIES[0]]; // San Francisco and New Delhi
+          setSavedLocations(defaultLocations);
+          fetchWeatherForLocation(defaultLocations[0]);
         }
       } else {
-        // Use default city instead of requesting location
-        setSavedLocations([DEFAULT_CITY]);
-        fetchWeatherForLocation(DEFAULT_CITY);
+        // Use default cities instead of requesting location
+        const defaultLocations = [DEFAULT_CITY, INDIAN_CITIES[0]]; // San Francisco and New Delhi
+        setSavedLocations(defaultLocations);
+        fetchWeatherForLocation(defaultLocations[0]);
       }
     };
     
@@ -368,6 +433,40 @@ const Index = () => {
                     ))}
                   </div>
                 </div>
+                
+                {/* Indian Cities Section */}
+                <div className="border-t border-border my-4 pt-4">
+                  <h3 className="text-sm font-medium mb-2">Indian Cities</h3>
+                  <div className="space-y-1">
+                    {INDIAN_CITIES.map(city => (
+                      <Button 
+                        key={city.id} 
+                        variant="ghost" 
+                        className="w-full justify-start text-foreground/80 hover:text-foreground"
+                        onClick={() => {
+                          handleLocationSelect(city);
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        <MapPin size={14} className="mr-2" />
+                        {city.fullName}
+                        {!savedLocations.some(loc => loc.id === city.id) && (
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="ml-auto h-6 w-6" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveLocation(city);
+                            }}
+                          >
+                            <Plus size={14} />
+                          </Button>
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -421,6 +520,30 @@ const Index = () => {
                   />
                 </div>
               </div>
+              
+              {/* Indian Cities Suggestions */}
+              {searchQuery.length < 2 && (
+                <div className="mt-4 mb-2">
+                  <h3 className="text-sm font-medium mb-2 text-muted-foreground">Popular Indian Cities</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {INDIAN_CITIES.map(city => (
+                      <Button
+                        key={city.id}
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => {
+                          handleLocationSelect(city);
+                          setIsSearchOpen(false);
+                        }}
+                      >
+                        <MapPin size={14} className="mr-2" />
+                        {city.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <div className="max-h-[300px] overflow-y-auto">
                 {searchResults.length > 0 ? (
                   searchResults.map(location => (
@@ -503,6 +626,53 @@ const Index = () => {
             <p className="text-muted-foreground mt-4">No weather data available</p>
           )}
         </div>
+        
+        {/* Weather Alerts */}
+        {!isLoading && currentWeather && currentWeather.alerts && currentWeather.alerts.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-2 flex items-center">
+              <Bell size={18} className="mr-2 text-amber-500" />
+              Weather Alerts
+            </h2>
+            <div className="space-y-2">
+              {currentWeather.alerts.map((alert, index) => {
+                let alertColor = "bg-blue-500/10 border-blue-500/30";
+                if (alert.severity === 'severe') {
+                  alertColor = "bg-amber-500/10 border-amber-500/30";
+                } else if (alert.severity === 'extreme') {
+                  alertColor = "bg-red-500/10 border-red-500/30";
+                }
+                
+                return (
+                  <Card 
+                    key={index} 
+                    glass={true} 
+                    className={`p-4 transition-colors duration-300 border-l-4 ${alertColor}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-base">{alert.title}</h3>
+                        <p className="text-sm text-foreground/70 mt-1">
+                          {alert.startTime} - {alert.endTime}
+                        </p>
+                        <p className="mt-2 text-sm">{alert.description}</p>
+                      </div>
+                      <div className={`rounded-full p-1.5 ${
+                        alert.severity === 'extreme' 
+                          ? 'bg-red-500/20 text-red-500' 
+                          : alert.severity === 'severe' 
+                            ? 'bg-amber-500/20 text-amber-500' 
+                            : 'bg-blue-500/20 text-blue-500'
+                      }`}>
+                        <AlertTriangle size={16} />
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
         
         {/* Weather Cards */}
         {!isLoading && currentWeather && (
@@ -691,6 +861,28 @@ const Index = () => {
                         />
                       </div>
                     </div>
+                    {/* Indian Cities Suggestions */}
+                    {searchQuery.length < 2 && (
+                      <div className="mt-4 mb-2">
+                        <h3 className="text-sm font-medium mb-2 text-muted-foreground">Popular Indian Cities</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          {INDIAN_CITIES
+                            .filter(city => !savedLocations.some(loc => loc.id === city.id))
+                            .map(city => (
+                              <Button
+                                key={city.id}
+                                variant="outline"
+                                className="justify-start"
+                                onClick={() => handleSaveLocation(city)}
+                              >
+                                <MapPin size={14} className="mr-2" />
+                                {city.name}
+                              </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="max-h-[300px] overflow-y-auto">
                       {searchResults
                         .filter(location => !savedLocations.some(loc => loc.id === location.id))
@@ -710,9 +902,9 @@ const Index = () => {
                             </Button>
                           ))
                       ) : (
-                        <p className="text-center py-4 text-muted-foreground">
-                          {searchQuery.length > 1 ? 'No new locations found' : 'Type to search for a city'}
-                        </p>
+                        searchQuery.length > 1 ? (
+                          <p className="text-center py-4 text-muted-foreground">No new locations found</p>
+                        ) : null
                       )}
                     </div>
                   </DialogContent>

@@ -1,8 +1,8 @@
 // OpenWeatherMap API service
 // Get your API key from: https://openweathermap.org/api
 
-// You should store this in an environment variable in a real application
-const API_KEY = 'YOUR_API_KEY'; // Replace with your actual API key
+// Use API key from environment variable if available, otherwise use the placeholder
+const API_KEY = import.meta.env.VITE_WEATHER_API_KEY || 'YOUR_API_KEY'; 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 const UNITS = 'metric' as const; // For Celsius, use 'imperial' for Fahrenheit
@@ -24,6 +24,15 @@ export interface WeatherData {
   icon: string;
   hourlyForecast: HourlyForecast[];
   dailyForecast: DailyForecast[];
+  alerts?: WeatherAlert[]; // Optional weather alerts
+}
+
+export interface WeatherAlert {
+  title: string;
+  description: string;
+  severity: 'moderate' | 'severe' | 'extreme';
+  startTime: string;
+  endTime: string;
 }
 
 export interface HourlyForecast {
@@ -81,6 +90,22 @@ const getMockWeatherData = (): WeatherData => {
       { day: 'Thu', high: 27, low: 19, icon: '02d', precipitation: 0 },
       { day: 'Fri', high: 24, low: 18, icon: '10d', precipitation: 30 },
       { day: 'Sat', high: 22, low: 17, icon: '10d', precipitation: 60 },
+    ],
+    alerts: [
+      {
+        title: 'Excessive Heat Warning',
+        description: 'The National Weather Service has issued an excessive heat warning. High temperatures may cause heat-related illnesses.',
+        severity: 'severe',
+        startTime: '12:00 PM',
+        endTime: '8:00 PM'
+      },
+      {
+        title: 'Air Quality Alert',
+        description: 'Air quality may be unhealthy for sensitive groups. Reduce prolonged outdoor activities if you experience respiratory symptoms.',
+        severity: 'moderate',
+        startTime: '6:00 AM',
+        endTime: '6:00 PM'
+      }
     ]
   };
 };
@@ -91,6 +116,7 @@ const constructWeatherData = (currentData: any, forecastData: any | null): Weath
   let hourlyForecast = [];
   let dailyForecast = [];
   let precipitation = 0;
+  let alerts: WeatherAlert[] | undefined = undefined;
   
   if (forecastData) {
     // Process forecast data as normal
@@ -140,6 +166,17 @@ const constructWeatherData = (currentData: any, forecastData: any | null): Weath
     }));
     
     precipitation = forecastData.list[0].pop * 100;
+    
+    // Process weather alerts if available (OneCall API)
+    if (forecastData.alerts) {
+      alerts = forecastData.alerts.map((alert: any) => ({
+        title: alert.event || 'Weather Alert',
+        description: alert.description || '',
+        severity: determineSeverity(alert.event),
+        startTime: formatTime(alert.start),
+        endTime: formatTime(alert.end)
+      }));
+    }
   } else {
     // Create generic forecast if not available
     hourlyForecast = [
@@ -177,7 +214,25 @@ const constructWeatherData = (currentData: any, forecastData: any | null): Weath
     icon: currentData.weather[0].icon,
     hourlyForecast,
     dailyForecast,
+    alerts,
   };
+};
+
+// Determine severity level of weather alert
+const determineSeverity = (eventType: string): 'moderate' | 'severe' | 'extreme' => {
+  const lowercaseEvent = eventType.toLowerCase();
+  
+  if (lowercaseEvent.includes('extreme') || 
+      lowercaseEvent.includes('hurricane') || 
+      lowercaseEvent.includes('tornado')) {
+    return 'extreme';
+  } else if (lowercaseEvent.includes('severe') || 
+            lowercaseEvent.includes('storm') || 
+            lowercaseEvent.includes('warning')) {
+    return 'severe';
+  } else {
+    return 'moderate';
+  }
 };
 
 // Format temperature according to units
